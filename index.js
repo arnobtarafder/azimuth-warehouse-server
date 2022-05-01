@@ -17,10 +17,15 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try{
         await client.connect();
-        // const furnitureCollection = client.db("AzimWare").collection("furniture");
-        
-        // app.get("/furniture")
         console.log("database connected");
+        const furnitureCollection = client.db("AzimWare").collection("furniture");
+        
+        app.get("/furnitures", async(req, res) => {
+            const query = {};
+            const cursor = furnitureCollection.find(query);
+            const furnitures = await cursor.toArray();
+            res.send(furnitures)
+        })
     }
     
     finally{
@@ -35,5 +40,5 @@ app.get("/", (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log("Listening to the port", port + 2000);
+    console.log("Listening to the port", port );
 })
