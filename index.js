@@ -15,40 +15,59 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 async function run() {
-    try{
+    try {
         await client.connect();
         console.log("database connected");
         const furnitureCollection = client.db("AzimWare").collection("furniture");
-        
+
         // GET ITEMS  
-        app.get("/products", async(req, res) => {
+        app.get("/products", async (req, res) => {
             const query = {};
             const cursor = furnitureCollection.find(query);
             const products = await cursor.toArray();
             res.send(products)
         })
 
+
+        // FETCH A PRODUCT BY ID
+        app.get("/products/:id", async(req, res) => {
+            const productId = req.params.id;
+            const query = {_id: ObjectId(productId)};
+            const product = await furnitureCollection.findOne(query);
+            res.send(product);
+        })
+
+
         // QUANTITY UPDATE BY PUT
-        app.put("/products/:id", async(req, res) => {
+        app.put("/products/:id", async (req, res) => {
             const id = req.params.id;
             const deliveredProduct = req.body;
             console.log(deliveredProduct);
-            const filter = {_id: ObjectId(id)};
-            const options = {upsert: true};
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
             const updateDoc = {
                 $set: {
                     quantity: deliveredProduct?.quantity
                 },
             };
             const result = await furnitureCollection.updateOne(filter, updateDoc, options);
-            
+
             res.send(result);
         });
 
-    
+        // ADD ITEMS
+        app.post("/products", async (req, res) => {
+            const newProduct = req.body;
+            const result = await furnitureCollection.insertOne(newProduct);
+            res.send(result)
+        })
+
+
+
+
     }
-    
-    finally{
+
+    finally {
 
     }
 }
@@ -60,5 +79,5 @@ app.get("/", (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log("Listening to the port", port );
+    console.log("Listening to the port", port);
 })
