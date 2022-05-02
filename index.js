@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 require("dotenv").config();
@@ -20,12 +20,32 @@ async function run() {
         console.log("database connected");
         const furnitureCollection = client.db("AzimWare").collection("furniture");
         
-        app.get("/furnitures", async(req, res) => {
+        // GET ITEMS  
+        app.get("/products", async(req, res) => {
             const query = {};
             const cursor = furnitureCollection.find(query);
-            const furnitures = await cursor.toArray();
-            res.send(furnitures)
+            const products = await cursor.toArray();
+            res.send(products)
         })
+
+        // QUANTITY UPDATE BY PUT
+        app.put("/products/:id", async(req, res) => {
+            const id = req.params.id;
+            const deliveredProduct = req.body;
+            console.log(deliveredProduct);
+            const filter = {_id: ObjectId(id)};
+            const options = {upsert: true};
+            const updateDoc = {
+                $set: {
+                    quantity: deliveredProduct?.quantity
+                },
+            };
+            const result = await furnitureCollection.updateOne(filter, updateDoc, options);
+            
+            res.send(result);
+        });
+
+    
     }
     
     finally{
